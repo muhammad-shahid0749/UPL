@@ -20,6 +20,7 @@ import datasets.sun397
 import datasets.caltech101
 import datasets.ucf101
 import datasets.imagenet
+import datasets.jafee
 
 import trainers.upltrainer
 import trainers.hhzsclip
