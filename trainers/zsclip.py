@@ -26,6 +26,7 @@ CUSTOM_TEMPLATES = {
     "ImageNetA": "a photo of a {}.",
     "ImageNetR": "a photo of a {}.",
     "Jaffe": "a photo of a {}.",
+    "CKPlus": "a photo of a {}.",
 }
 
 

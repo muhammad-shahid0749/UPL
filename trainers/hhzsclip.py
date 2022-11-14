@@ -31,6 +31,7 @@ CUSTOM_TEMPLATES = {
     "ImageNetA": "a photo of a {}.",
     "ImageNetR": "a photo of a {}.",
     "Jaffe": "a photo of a {}.",
+    "CKPlus": "a photo of a {}.",
     # semi-supervised templates
     "SSOxfordPets": "a photo of a {}, a type of pet.",
     "SSOxfordFlowers": "a photo of a {}, a type of flower.",
@@ -44,6 +45,7 @@ CUSTOM_TEMPLATES = {
     "SSUCF101": "a photo of a person doing {}.",
     "SSImageNet": "a photo of a {}.",
     "SSJaffe": "a photo of a {}.",
+    "SSCKPlus": "a photo of a {}.",
 }
 
 
