@@ -67,8 +67,8 @@ CUSTOM_TEMPLATES = {
     "SSCaltech101": "a photo of a {}.",
     "SSUCF101": "a photo of a person doing {}.",
     "SSImageNet": "a photo of a {}.",
-    "SSJaffe": "a photo of a {}.",
-    "SSCKPlus": "a photo of a {}.",
+    "SSJaffe": "a photo of a {} face expression.",
+    "SSCKPlus": "a photo of {} face expression.",
 }
 
 
@@ -279,6 +279,7 @@ class CustomCLIP(nn.Module):
             text_features = text_features / text_features.norm(dim=-1, keepdim=True)
 
         image_features = self.clip.encode_image(image)
+
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         logit_scale = self.clip.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()
