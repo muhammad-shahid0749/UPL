@@ -111,7 +111,7 @@ def load_clip_to_cpu(cfg):
                       "vision_depth": 0,
                       "language_depth": 0, "vision_ctx": 0,
                       "language_ctx": 0}
-    model = clip.build_model(state_dict or model.state_dict(), design_details)
+    model = clip.build_model(state_dict or model.state_dict())
 
     return model
 
@@ -250,6 +250,9 @@ class CustomCLIP(nn.Module):
         self.text_encoder = TextEncoder(clip_model)
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
+        self.clip = clip_model
+        self.classnames = classnames
+        self.cfg = cfg
 
     def forward(self, image, label=None):
         tokenized_prompts = self.tokenized_prompts
@@ -1376,212 +1379,212 @@ class UPLTrainer(TrainerX):
 
 
     
-#    def build_data_loader(self):
-#        """Create essential data-related attributes.
+    def build_data_loader(self):
+        """Create essential data-related attributes.
 
-#        A re-implementation of this method must create the
-#        same attributes (except self.dm).
-#        """
-#        dm = UPLDataManager(self.cfg)
+        A re-implementation of this method must create the
+        same attributes (except self.dm).
+        """
+        dm = UPLDataManager(self.cfg)
 
-#        self.train_loader_x = dm.train_loader_x
-#        self.train_loader_u = dm.train_loader_u  # optional, can be None
-#        self.val_loader = dm.val_loader  # optional, can be None
-#        self.test_loader = dm.test_loader
-#        self.train_loader_sstrain = dm.train_loader_sstrain
-#        self.num_classes = dm.num_classes
-#        self.num_source_domains = dm.num_source_domains
-#        self.lab2cname = dm.lab2cname  # dict {label: classname}
+        self.train_loader_x = dm.train_loader_x
+        self.train_loader_u = dm.train_loader_u  # optional, can be None
+        self.val_loader = dm.val_loader  # optional, can be None
+        self.test_loader = dm.test_loader
+        self.train_loader_sstrain = dm.train_loader_sstrain
+        self.num_classes = dm.num_classes
+        self.num_source_domains = dm.num_source_domains
+        self.lab2cname = dm.lab2cname  # dict {label: classname}
         
-#        if self.cfg.DATALOADER.OPEN_SETTING:
-#            self.test_novel_loader = dm.test_novel_loader
-#            self.test_base_loader = dm.test_base_loader
+        if self.cfg.DATALOADER.OPEN_SETTING:
+            self.test_novel_loader = dm.test_novel_loader
+            self.test_base_loader = dm.test_base_loader
         
 
-#        self.dm = dm
+        self.dm = dm
     
-#    def sstrain_with_id(self, model_id):
-#        self.sstrain(self.start_epoch, self.max_epoch, model_id)
+    def sstrain_with_id(self, model_id):
+        self.sstrain(self.start_epoch, self.max_epoch, model_id)
 
-#    def sstrain(self, start_epoch, max_epoch, model_id):
-#        """Generic training loops."""
-#        self.start_epoch = start_epoch
-#        self.max_epoch = max_epoch
+    def sstrain(self, start_epoch, max_epoch, model_id):
+        """Generic training loops."""
+        self.start_epoch = start_epoch
+        self.max_epoch = max_epoch
 
-#        self.before_train()
-#        for self.epoch in range(self.start_epoch, self.max_epoch):
-#            self.before_epoch()
-#            self.run_epoch_with_sstrain()
-#            self.after_epoch(model_id)
-#        self.after_train(model_id)
+        self.before_train()
+        for self.epoch in range(self.start_epoch, self.max_epoch):
+            self.before_epoch()
+            self.run_epoch_with_sstrain()
+            self.after_epoch(model_id)
+        self.after_train(model_id)
     
-#    def run_epoch_with_sstrain(self):
-#        self.set_model_mode("train")
-#        losses = MetricMeter()
-#        batch_time = AverageMeter()
-#        data_time = AverageMeter()
-#        self.num_batches = len(self.train_loader_sstrain)
+    def run_epoch_with_sstrain(self):
+        self.set_model_mode("train")
+        losses = MetricMeter()
+        batch_time = AverageMeter()
+        data_time = AverageMeter()
+        self.num_batches = len(self.train_loader_sstrain)
 
-#        end = time.time()
-#        for self.batch_idx, batch in enumerate(self.train_loader_sstrain):
-#            data_time.update(time.time() - end)
-#            loss_summary = self.forward_backward(batch)
-#            batch_time.update(time.time() - end)
-#            losses.update(loss_summary)
+        end = time.time()
+        for self.batch_idx, batch in enumerate(self.train_loader_sstrain):
+            data_time.update(time.time() - end)
+            loss_summary = self.forward_backward(batch)
+            batch_time.update(time.time() - end)
+            losses.update(loss_summary)
 
-#            if (
-#                self.batch_idx + 1
-#            ) % self.cfg.TRAIN.PRINT_FREQ == 0 or self.num_batches < self.cfg.TRAIN.PRINT_FREQ:
-#                nb_remain = 0
-#                nb_remain += self.num_batches - self.batch_idx - 1
-#                nb_remain += (
-#                    self.max_epoch - self.epoch - 1
-#                ) * self.num_batches
-#                eta_seconds = batch_time.avg * nb_remain
-#                eta = str(datetime.timedelta(seconds=int(eta_seconds)))
-#                print(
-#                    "epoch [{0}/{1}][{2}/{3}]\t"
-#                    "time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
-#                    "data {data_time.val:.3f} ({data_time.avg:.3f})\t"
-#                    "eta {eta}\t"
-#                    "{losses}\t"
-#                    "lr {lr:.6e}".format(
-#                        self.epoch + 1,
-#                        self.max_epoch,
-#                        self.batch_idx + 1,
-#                        self.num_batches,
-#                        batch_time=batch_time,
-#                        data_time=data_time,
-#                        eta=eta,
-#                        losses=losses,
-#                        lr=self.get_current_lr(),
-#                    )
-#                )
+            if (
+                self.batch_idx + 1
+            ) % self.cfg.TRAIN.PRINT_FREQ == 0 or self.num_batches < self.cfg.TRAIN.PRINT_FREQ:
+                nb_remain = 0
+                nb_remain += self.num_batches - self.batch_idx - 1
+                nb_remain += (
+                    self.max_epoch - self.epoch - 1
+                ) * self.num_batches
+                eta_seconds = batch_time.avg * nb_remain
+                eta = str(datetime.timedelta(seconds=int(eta_seconds)))
+                print(
+                    "epoch [{0}/{1}][{2}/{3}]\t"
+                    "time {batch_time.val:.3f} ({batch_time.avg:.3f})\t"
+                    "data {data_time.val:.3f} ({data_time.avg:.3f})\t"
+                    "eta {eta}\t"
+                    "{losses}\t"
+                    "lr {lr:.6e}".format(
+                        self.epoch + 1,
+                        self.max_epoch,
+                        self.batch_idx + 1,
+                        self.num_batches,
+                        batch_time=batch_time,
+                        data_time=data_time,
+                        eta=eta,
+                        losses=losses,
+                        lr=self.get_current_lr(),
+                    )
+                )
 
-#            n_iter = self.epoch * self.num_batches + self.batch_idx
-#            for name, meter in losses.meters.items():
-#                self.write_scalar("train/" + name, meter.avg, n_iter)
-#            self.write_scalar("train/lr", self.get_current_lr(), n_iter)
+            n_iter = self.epoch * self.num_batches + self.batch_idx
+            for name, meter in losses.meters.items():
+                self.write_scalar("train/" + name, meter.avg, n_iter)
+            self.write_scalar("train/lr", self.get_current_lr(), n_iter)
 
-#            end = time.time()
+            end = time.time()
     
-#    def after_epoch(self, model_id):
-#        last_epoch = (self.epoch + 1) == self.max_epoch
-#        do_test = not self.cfg.TEST.NO_TEST
-#        meet_checkpoint_freq = (
-#            (self.epoch + 1) % self.cfg.TRAIN.CHECKPOINT_FREQ == 0
-#            if self.cfg.TRAIN.CHECKPOINT_FREQ > 0 else False
-#        )
-#        # if ((self.epoch + 1) % 5) == 0 and self.cfg.DATASET.NAME!="SSImageNet":
-#        #     curr_result = self.test(split="test")
-#        if do_test and self.cfg.TEST.FINAL_MODEL == "best_val":
-#            curr_result = self.test(split="val")
-#            is_best = curr_result > self.best_result
-#            if is_best:
-#                self.best_result = curr_result
-#                self.save_model(
-#                    self.epoch,
-#                    self.output_dir,
-#                    model_name="model-best-{}.pth.tar".format(model_id)
-#                )
+    def after_epoch(self, model_id):
+        last_epoch = (self.epoch + 1) == self.max_epoch
+        do_test = not self.cfg.TEST.NO_TEST
+        meet_checkpoint_freq = (
+            (self.epoch + 1) % self.cfg.TRAIN.CHECKPOINT_FREQ == 0
+            if self.cfg.TRAIN.CHECKPOINT_FREQ > 0 else False
+        )
+        # if ((self.epoch + 1) % 5) == 0 and self.cfg.DATASET.NAME!="SSImageNet":
+        #     curr_result = self.test(split="test")
+        if do_test and self.cfg.TEST.FINAL_MODEL == "best_val":
+            curr_result = self.test(split="val")
+            is_best = curr_result > self.best_result
+            if is_best:
+                self.best_result = curr_result
+                self.save_model(
+                    self.epoch,
+                    self.output_dir,
+                    model_name="model-best-{}.pth.tar".format(model_id)
+                )
 
-#        if meet_checkpoint_freq or last_epoch:
-#            self.save_model(
-#                    self.epoch,
-#                    self.output_dir,
-#                    model_name="model-best-{}.pth.tar".format(model_id)
-#                )
+        if meet_checkpoint_freq or last_epoch:
+            self.save_model(
+                    self.epoch,
+                    self.output_dir,
+                    model_name="model-best-{}.pth.tar".format(model_id)
+                )
 
-#    def after_train(self, model_id):
-#        print("Finished training")
+    def after_train(self, model_id):
+        print("Finished training")
 
-#        do_test = not self.cfg.TEST.NO_TEST
-#        if do_test:
-#            if self.cfg.TEST.FINAL_MODEL == "best_val":
-#                print("Deploy the model with the best val performance")
-#                self.load_model_by_id(self.output_dir, model_id)
-#            # self.test(split='novel')
-#            # self.test(split='base')
-#            # self.test(split='train')
-#            self.test(split='test')
+        do_test = not self.cfg.TEST.NO_TEST
+        if do_test:
+            if self.cfg.TEST.FINAL_MODEL == "best_val":
+                print("Deploy the model with the best val performance")
+                self.load_model_by_id(self.output_dir, model_id)
+            # self.test(split='novel')
+            # self.test(split='base')
+            # self.test(split='train')
+            self.test(split='test')
             
 
-#        # Show elapsed time
-#        elapsed = round(time.time() - self.time_start)
-#        elapsed = str(datetime.timedelta(seconds=elapsed))
-#        print("Elapsed: {}".format(elapsed))
+        # Show elapsed time
+        elapsed = round(time.time() - self.time_start)
+        elapsed = str(datetime.timedelta(seconds=elapsed))
+        print("Elapsed: {}".format(elapsed))
 
-#        # Close writer
-#        self.close_writer()
+        # Close writer
+        self.close_writer()
 
-#    def parse_batch_test(self, batch):
-#        input = batch["img"]
-#        label = batch["label"]
+    def parse_batch_test(self, batch):
+        input = batch["img"]
+        label = batch["label"]
 
-#        input = input.to(self.device)
-#        label = label.to(self.device)
+        input = input.to(self.device)
+        label = label.to(self.device)
 
-#        return input, label
+        return input, label
     
-#    def parse_batch_test_with_impath(self, batch):
-#        input = batch["img"]
-#        label = batch["label"]
-#        impath = batch["impath"]
+    def parse_batch_test_with_impath(self, batch):
+        input = batch["img"]
+        label = batch["label"]
+        impath = batch["impath"]
 
-#        input = input.to(self.device)
-#        label = label.to(self.device)
-#        # impath = impath.to(self.device)
+        input = input.to(self.device)
+        label = label.to(self.device)
+        # impath = impath.to(self.device)
 
-#        return input, label, impath
+        return input, label, impath
 
-#    @torch.no_grad()
-#    def test_with_existing_logits(self, logits, split='test'):
+    @torch.no_grad()
+    def test_with_existing_logits(self, logits, split='test'):
        
 
-#        self.set_model_mode("eval")
-#        self.evaluator.reset()
+        self.set_model_mode("eval")
+        self.evaluator.reset()
 
-#        save_path = os.path.join(self.cfg.TEST.Analyze_Result_Path, self.cfg.DATASET.NAME, 
-#        str(self.cfg.OPTIM.MAX_EPOCH)+'_'+str(self.cfg.SEED)+'_'+str(self.cfg.DATASET.NUM_SHOTS)+'_random_init'+str(self.cfg.TRAINER.UPLTrainer.CLASS_TOKEN_POSITION))
-#        if not os.path.exists(save_path):
-#            os.makedirs(save_path)
+        save_path = os.path.join(self.cfg.TEST.Analyze_Result_Path, self.cfg.DATASET.NAME, 
+        str(self.cfg.OPTIM.MAX_EPOCH)+'_'+str(self.cfg.SEED)+'_'+str(self.cfg.DATASET.NUM_SHOTS)+'_random_init'+str(self.cfg.TRAINER.UPLTrainer.CLASS_TOKEN_POSITION))
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
 
-#        results_id = 0
-#        while os.path.exists(os.path.join(save_path, 'per_image_results_{}_{}.txt'.format(split, results_id))):
-#            results_id += 1
-#        self.per_image_txt_writer = open(os.path.join(save_path, 'per_image_results_{}_{}.txt'.format(split, results_id)), 'w')
-#        self.per_class_txt_writer = open(os.path.join(save_path, 'per_class_results_{}_{}.txt'.format(split, results_id)), 'w')
+        results_id = 0
+        while os.path.exists(os.path.join(save_path, 'per_image_results_{}_{}.txt'.format(split, results_id))):
+            results_id += 1
+        self.per_image_txt_writer = open(os.path.join(save_path, 'per_image_results_{}_{}.txt'.format(split, results_id)), 'w')
+        self.per_class_txt_writer = open(os.path.join(save_path, 'per_class_results_{}_{}.txt'.format(split, results_id)), 'w')
 
-#        if split is None:
-#            split = self.cfg.TEST.SPLIT
+        if split is None:
+            split = self.cfg.TEST.SPLIT
 
-#        if split == "val" and self.val_loader is not None:
-#            data_loader = self.val_loader
-#            print("Do evaluation on {} set".format(split))
-#        elif split=="novel":
-#            data_loader = self.test_novel_loader
-#            print("Do evaluation on test novel set")
-#        elif split=="base":
-#            data_loader = self.test_base_loader
-#            print("Do evaluation on test base set")
-#        elif split=="all":
-#            data_loader = self.test_loader
-#            print("Do evaluation on test set")
-#        else:
-#            data_loader = self.test_loader
-#            print("Do evaluation on test set")
+        if split == "val" and self.val_loader is not None:
+            data_loader = self.val_loader
+            print("Do evaluation on {} set".format(split))
+        elif split=="novel":
+            data_loader = self.test_novel_loader
+            print("Do evaluation on test novel set")
+        elif split=="base":
+            data_loader = self.test_base_loader
+            print("Do evaluation on test base set")
+        elif split=="all":
+            data_loader = self.test_loader
+            print("Do evaluation on test set")
+        else:
+            data_loader = self.test_loader
+            print("Do evaluation on test set")
 
-#        label_all = []
-#        for batch_idx, batch in enumerate(data_loader):
-#            input, label = self.parse_batch_test(batch)
-#            label_all.append(label)
-#        label_all = torch.hstack(label_all)
-#        print(label_all.shape)
+        label_all = []
+        for batch_idx, batch in enumerate(data_loader):
+            input, label = self.parse_batch_test(batch)
+            label_all.append(label)
+        label_all = torch.hstack(label_all)
+        print(label_all.shape)
 
-#        self.evaluator.process(logits, label_all, self.per_image_txt_writer, self.per_class_txt_writer)
-#        results = self.evaluator.evaluate()
-#        for k, v in results.items():
-#            tag = "{}/{}".format(split, k)
-#            self.write_scalar(tag, v, self.epoch)
+        self.evaluator.process(logits, label_all, self.per_image_txt_writer, self.per_class_txt_writer)
+        results = self.evaluator.evaluate()
+        for k, v in results.items():
+            tag = "{}/{}".format(split, k)
+            self.write_scalar(tag, v, self.epoch)
 
-#        return results
+        return results
