@@ -25,6 +25,9 @@ class Bottleneck(nn.Module):
         self.conv3 = nn.Conv2d(planes, planes * self.expansion, 1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes * self.expansion)
 
+
+        
+
         self.relu = nn.ReLU(inplace=True)
         self.downsample = None
         self.stride = stride
@@ -110,11 +113,7 @@ class ModifiedResNet(nn.Module):
         self.bn2 = nn.BatchNorm2d(width // 2)
         self.conv3 = nn.Conv2d(width // 2, width, kernel_size=3, padding=1, bias=False)
         self.bn3 = nn.BatchNorm2d(width)
-        #2 layers added
-        self.conv4 = nn.Conv2d(width // 2, width, kernel_size=3, padding=1, bias=False)
-        self.bn4 = nn.BatchNorm2d(width)
-        self.conv5 = nn.Conv2d(width // 2, width, kernel_size=3, padding=1, bias=False)
-        self.bn5 = nn.BatchNorm2d(width)
+        
 
         self.avgpool = nn.AvgPool2d(2)
         self.relu = nn.ReLU(inplace=True)

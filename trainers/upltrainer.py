@@ -76,8 +76,9 @@ CUSTOM_TEMPLATES = {
     "ImageNetV2": "a photo of a {}.",
     "ImageNetA": "a photo of a {}.",
     "ImageNetR": "a photo of a {}.",
-    "Jaffe": "a photo of a {}.",
-    "CKPlus": "a photo of a {}.",
+    "Jaffe": "a photo of a {} face expression.",
+    "CKPlus": "a photo of a {} face expression.",
+    "FER2013": "a photo of a {} face expression.",
     # semi-supervised templates
     "SSOxfordPets": "a photo of a {}, a type of pet.",
     "SSOxfordFlowers": "a photo of a {}, a type of flower.",
@@ -92,6 +93,7 @@ CUSTOM_TEMPLATES = {
     "SSImageNet": "a photo of a {}.",
     "SSJaffe": "a photo of a {} face expression.",
     "SSCKPlus": "a photo of {} face expression.",
+    "SSFER2013": "a photo of {} face expression.",
 }
 
 
@@ -293,10 +295,6 @@ class CustomCLIP(nn.Module):
         logit_scale = self.clip.logit_scale.exp()
         logits = logit_scale * image_features @ text_features.t()
         return logits, image_features, text_features
-
-
-
-
 
 
 @TRAINER_REGISTRY.register()
